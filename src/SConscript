@@ -1,0 +1,11 @@
+import os
+
+LIB_DIR=os.environ['LIB_DIR'];
+
+SQLITE3_SOURCES = [
+  'sqlite3.c',
+]
+
+env=DefaultEnvironment().Clone()
+env.Library(os.path.join(LIB_DIR, 'sqlite3'), SQLITE3_SOURCES, LIBS=[])
+

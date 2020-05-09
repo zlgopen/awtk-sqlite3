@@ -1,0 +1,6 @@
+import os
+
+BIN_DIR=os.environ['BIN_DIR'];
+
+env=DefaultEnvironment().Clone()
+env.Program(os.path.join(BIN_DIR, 'sqlite3_test'), ['sqlite3_test.c','main.c']);
