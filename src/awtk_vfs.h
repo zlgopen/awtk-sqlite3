@@ -6,7 +6,10 @@
 #define O_WRONLY 0x0001 /* open for writing only */
 #define O_RDWR 0x0002   /* open for reading and writing */
 #define O_EXCL 0
-#define O_CREAT 0
+
+#ifndef O_CREAT
+#define O_CREAT 0x00080
+#endif /*O_CREAT*/
 
 /*
 ** Define various macros that are missing from some systems.
@@ -58,10 +61,7 @@
 #endif            /*EISDIR*/
 
 static int _Access(const char* pathname, int mode) {
-  fs_file_t* f = fs_open_file(os_fs(), pathname, "r");
-  if (f != NULL) {
-    fs_file_close(f);
-
+  if (file_exist(pathname)) {
     return 0;
   } else {
     return -1;
@@ -210,13 +210,31 @@ static int _awtk_get_temp_name(int nBuf, char* zBuf) {
 ** process that is able to write to the database will also be able to
 ** recover the hot journals.
 */
-const char* to_str_mode(int f, int m) {
+const char* to_str_mode(const char* file_path, int flags, int m) {
   /*TODO*/
-  return "r+";
+  if (flags & O_RDONLY) {
+    return "rb";
+  } else if (flags & O_RDWR) {
+    if (flags & O_CREAT) {
+      if (file_exist(file_path)) {
+        return "rb+";
+      } else {
+        return "wb+";
+      }
+    } else {
+      return "rb+";
+    }
+  }
+  return "rb+";
 }
 
 static fs_file_t* _awtk_fs_open(const char* file_path, int f, int m) {
-  return fs_open_file(os_fs(), file_path, to_str_mode(f, m));
+  const char* mode = to_str_mode(file_path, f, m);
+  fs_file_t* file = fs_open_file(os_fs(), file_path, mode);
+  if (file == NULL) {
+    log_debug("open %s with mode(%s) failed\n", file_path, mode);
+  }
+  return file;
 }
 
 static int _awtk_vfs_open(sqlite3_vfs* pvfs, const char* file_path, sqlite3_file* file_id,
