@@ -1,10 +1,12 @@
 #if defined(SQLITE_MUTEX_AWTK)
+#include "awtk.h"
+#include "tkc/mutex_nest.h"
 
 /*
 * rt-thread mutex
 */
 struct sqlite3_mutex {
-  tk_mutex_t* mutex;
+  tk_mutex_nest_t* mutex;
   int id; /* Mutex type */
 };
 
@@ -56,7 +58,7 @@ static int _awtk_mtx_init(void) {
   int i;
 
   for (i = 0; i < sizeof(_static_mutex) / sizeof(_static_mutex[0]); i++) {
-    _static_mutex[i].mutex = tk_mutex_create();
+    _static_mutex[i].mutex = tk_mutex_nest_create();
 
     if (_static_mutex[i].mutex == NULL) {
       return SQLITE_ERROR;
@@ -70,7 +72,7 @@ static int _awtk_mtx_end(void) {
   int i;
 
   for (i = 0; i < sizeof(_static_mutex) / sizeof(_static_mutex[0]); i++) {
-    tk_mutex_destroy(_static_mutex[i].mutex);
+    tk_mutex_nest_destroy(_static_mutex[i].mutex);
     _static_mutex[i].mutex = NULL;
   }
 
@@ -86,7 +88,7 @@ static sqlite3_mutex* _awtk_mtx_alloc(int id) {
       p = sqlite3Malloc(sizeof(sqlite3_mutex));
 
       if (p != NULL) {
-        p->mutex = tk_mutex_create();
+        p->mutex = tk_mutex_nest_create();
         p->id = id;
       }
       break;
@@ -105,7 +107,7 @@ static sqlite3_mutex* _awtk_mtx_alloc(int id) {
 static void _awtk_mtx_free(sqlite3_mutex* p) {
   assert(p != 0);
 
-  tk_mutex_destroy(p->mutex);
+  tk_mutex_nest_destroy(p->mutex);
 
   switch (p->id) {
     case SQLITE_MUTEX_FAST:
@@ -121,13 +123,13 @@ static void _awtk_mtx_free(sqlite3_mutex* p) {
 static void _awtk_mtx_enter(sqlite3_mutex* p) {
   assert(p != 0);
 
-  tk_mutex_lock(p->mutex);
+  tk_mutex_nest_lock(p->mutex);
 }
 
 static int _awtk_mtx_try(sqlite3_mutex* p) {
   assert(p != 0);
 
-  if (tk_mutex_try_lock(p->mutex) == RET_OK) {
+  if (tk_mutex_nest_try_lock(p->mutex) == RET_OK) {
     return SQLITE_BUSY;
   }
 
@@ -136,7 +138,7 @@ static int _awtk_mtx_try(sqlite3_mutex* p) {
 
 static void _awtk_mtx_leave(sqlite3_mutex* p) {
   assert(p != 0);
-  tk_mutex_unlock(p->mutex);
+  tk_mutex_nest_unlock(p->mutex);
 }
 
 #ifdef SQLITE_DEBUG
