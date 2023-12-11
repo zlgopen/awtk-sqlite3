@@ -40,7 +40,6 @@ static int _awtk_io_read(sqlite3_file* file_id, void* pbuf, int cnt, sqlite3_int
 
 static int _awtk_io_write(sqlite3_file* file_id, const void* pbuf, int cnt, sqlite3_int64 offset) {
   AWTK_SQLITE_FILE_T* file = (AWTK_SQLITE_FILE_T*)file_id;
-  sqlite3_int64 new_offset;
   int w_cnt;
 
   assert(file_id);

@@ -5,7 +5,9 @@
 #define O_RDONLY 0x0000 /* open for reading only */
 #define O_WRONLY 0x0001 /* open for writing only */
 #define O_RDWR 0x0002   /* open for reading and writing */
+#ifndef O_EXCL
 #define O_EXCL 0
+#endif /*O_EXCL*/
 
 #ifndef O_CREAT
 #define O_CREAT 0x00080
